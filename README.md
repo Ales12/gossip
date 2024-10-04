@@ -18,8 +18,10 @@ misc.php?action=gossip
 ## variabeln
 **header**
 `` {$newgossip_alert}``
+<br />
 **index**
 `` {$gossip_index}``
+<br />
 **modcp_nav_users**
 `` {$gossip_nav}``
 
