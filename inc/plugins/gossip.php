@@ -17,7 +17,7 @@ function gossip_info()
     return array(
         "name"			=> "Gerüchteküche",
         "description"	=> "Mit diesen Plugin können Charaktere Gerüchte in die Welt setzen.",
-        "website"		=> "",
+        "website"		=> "https://github.com/Ales12/gossip",
         "author"		=> "Ales",
         "authorsite"	=> "https://github.com/Ales12",
         "version"		=> "1.0",
@@ -624,7 +624,7 @@ function gossip_activate()
 
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
     find_replace_templatesets("modcp_nav_users", "#".preg_quote('{$nav_ipsearch}')."#i", '{$nav_ipsearch}{$gossip_nav}');
-
+    find_replace_templatesets("header", "#".preg_quote('{$pm_notice}')."#i", '{$newgossip_alert}{$pm_notice}');
 }
 
 function gossip_deactivate()
@@ -645,6 +645,7 @@ function gossip_deactivate()
 
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
     find_replace_templatesets("modcp_nav_users", "#".preg_quote('{$gossip_nav}')."#i", '', 0);
+    find_replace_templatesets("header", "#".preg_quote('{$newgossip_alert}')."#i", '', 0);
 }
 
 // ADMIN-CP PEEKER
@@ -750,7 +751,7 @@ function gossip_misc()
 
                 $add_gossip = array(
                     "gossip_text" => $db->escape_string($mybb->input['gossip']),
-                    "gossip_victims" => $mybb->input['victim'],
+                    "gossip_victims" => $db->escape_string($mybb->input['victim']),
                     "gossip_date" => $mybb->input['date'],
                     "gossip_group" => $db->escape_string($mybb->input['group']),
                     "gossip_from" => $gossip_from,
@@ -789,7 +790,7 @@ function gossip_misc()
             eval("\$gossip_edit = \"".$templates->get("gossip_edit")."\";");
 
             if($mybb->user['uid'] != 0){
-                if($mybb->user['uid'] == $gossip['gossip_from']) {
+                if($mybb->usergroup['canmodcp'] == 1) {
                     if($mybb->settings['gossip_group'] == 1){
                         $groups = explode(", ", $mybb->settings['gossip_groupname']);
 
@@ -824,8 +825,29 @@ function gossip_misc()
 
             foreach ($gossip_victims as $gossip_victim){
                 $count_victim++;
+                $gossip_victim = $db->escape_string($gossip_victim);
                 $chara_query = $db->simple_select("users", "*", "username ='$gossip_victim'");
                 $victim = $db->fetch_array($chara_query);
+
+                if($mybb->user['uid'] == $victim['uid']){
+                    if($mybb->settings['gossip_group'] == 1){
+                        $groups = explode(", ", $mybb->settings['gossip_groupname']);
+
+                        foreach ($groups as $group){
+                            $gossip_group .= "<option value='{$group}'>{$group}</option>";
+                        }
+
+                        $form_group = "<div class='form_box'>
+                    <div class='form_title'>{$lang->gossip_group}</div>
+                        <select name='group'>
+                        <option value='{$gossip['gossip_group']}'>{$gossip['gossip_group']}</option>
+                        {$gossip_group}
+            </select>
+                </div>";
+                    }
+                    eval("\$gossip_options = \"".$templates->get("gossip_options")."\";");
+                }
+                
                 $username = format_name($victim['username'], $victim['usergroup'], $victim['displaygroup']);
                 $victimname = build_profile_link($username, $victim['uid']);
                 array_push($all_victims, $victimname);
@@ -862,7 +884,7 @@ function gossip_misc()
 
             $edit_gossip = array(
                 "gossip_text" => $db->escape_string($mybb->input['gossip']),
-                "gossip_victims" => $mybb->input['victim'],
+                "gossip_victims" => $db->escape_string($mybb->input['victim']),
                 "gossip_date" => $mybb->input['date'],
                 "gossip_group" => $db->escape_string($mybb->input['group']),
                 "gossip_ok" => 0
@@ -941,6 +963,7 @@ function gossip_index(){
 
         foreach ($gossip_victims as $gossip_victim) {
             $count_victim++;
+            $gossip_victim = $db->escape_string($gossip_victim);
             $chara_query = $db->simple_select("users", "*", "username ='$gossip_victim'");
             $victim = $db->fetch_array($chara_query);
             $username = format_name($victim['username'], $victim['usergroup'], $victim['displaygroup']);
@@ -1028,6 +1051,7 @@ function gossip_modcp()
 
                 foreach ($gossip_victims as $gossip_victim) {
                     $count_victim++;
+                    $gossip_victim = $db->escape_string($gossip_victim);
                     $chara_query = $db->simple_select("users", "*", "username ='$gossip_victim'");
                     $victim = $db->fetch_array($chara_query);
                     $username = format_name($victim['username'], $victim['usergroup'], $victim['displaygroup']);
