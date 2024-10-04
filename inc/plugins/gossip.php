@@ -17,7 +17,7 @@ function gossip_info()
     return array(
         "name"			=> "Gerüchteküche",
         "description"	=> "Mit diesen Plugin können Charaktere Gerüchte in die Welt setzen.",
-        "website"		=> "https://github.com/Ales12/gossip",
+        "website"		=> "",
         "author"		=> "Ales",
         "authorsite"	=> "https://github.com/Ales12",
         "version"		=> "1.0",
@@ -79,20 +79,12 @@ function gossip_install()
             'value' => 'Hogwarts, Erwachsene allgemein, Todesser, Aversio',
             'disporder' => 2
         ),
-        // A yes/no boolean box
-        'gossip_profile' => array(
-            'title' => 'Gerüchte im Profil anzeigen?',
-            'description' => 'Soll die Gerüchte des jeweiligen Charakters in seinem Profil angezeigt werden?',
-            'optionscode' => 'yesno',
-            'value' => 1,
-            'disporder' => 3
-        ),
         'gossip_from' => array(
             'title' => 'Gerüchtestreuer',
             'description' => 'Wer soll das Gerücht streuen? Trage hier einen extra Namen ein, wenn die gestreuten Charaktere anonym bleiben sollen:',
             'optionscode' => 'text',
             'value' => '',
-            'disporder' => 4
+            'disporder' =>3
         ),
     );
 
@@ -572,7 +564,6 @@ function gossip_uninstall()
     $db->query("DELETE FROM " . TABLE_PREFIX . "settinggroups WHERE name='gossip'");
     $db->query("DELETE FROM " . TABLE_PREFIX . "settings WHERE name='gossip_group'");
     $db->query("DELETE FROM " . TABLE_PREFIX . "settings WHERE name='gossip_groupname'");
-    $db->query("DELETE FROM " . TABLE_PREFIX . "settings WHERE name='gossip_profile'");
     $db->query("DELETE FROM " . TABLE_PREFIX . "settings WHERE name='gossip_from'");
 
 
@@ -625,6 +616,7 @@ function gossip_activate()
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
     find_replace_templatesets("modcp_nav_users", "#".preg_quote('{$nav_ipsearch}')."#i", '{$nav_ipsearch}{$gossip_nav}');
     find_replace_templatesets("header", "#".preg_quote('{$pm_notice}')."#i", '{$newgossip_alert}{$pm_notice}');
+    find_replace_templatesets("index", "#".preg_quote('{$boardstats}')."#i", '{$boardstats}{$gossip_index}');
 }
 
 function gossip_deactivate()
@@ -646,6 +638,7 @@ function gossip_deactivate()
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
     find_replace_templatesets("modcp_nav_users", "#".preg_quote('{$gossip_nav}')."#i", '', 0);
     find_replace_templatesets("header", "#".preg_quote('{$newgossip_alert}')."#i", '', 0);
+    find_replace_templatesets("index", "#".preg_quote('{$gossip_index}')."#i", '', 0);
 }
 
 // ADMIN-CP PEEKER
@@ -847,7 +840,7 @@ function gossip_misc()
                     }
                     eval("\$gossip_options = \"".$templates->get("gossip_options")."\";");
                 }
-                
+
                 $username = format_name($victim['username'], $victim['usergroup'], $victim['displaygroup']);
                 $victimname = build_profile_link($username, $victim['uid']);
                 array_push($all_victims, $victimname);
